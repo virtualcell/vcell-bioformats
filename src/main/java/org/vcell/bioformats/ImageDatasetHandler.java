@@ -23,7 +23,17 @@ public class ImageDatasetHandler implements ImageDatasetService.Iface {
 	}
 
 	@Override
-	public ImageSizeInfo getImageSizeInfo(String fileName, int forceZSize) throws ThriftImageException, TException {
+	public ImageSizeInfo getImageSizeInfo(String fileName) throws ThriftImageException, TException {
+		try {
+			return reader.getImageSizeInfo(fileName, null);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ThriftImageException("ImageDatasetService.getImageSizeInfo() failed: "+e.getMessage());
+		}
+	}
+
+	@Override
+	public ImageSizeInfo getImageSizeInfoForceZ(String fileName, int forceZSize) throws ThriftImageException, TException {
 		try {
 			return reader.getImageSizeInfo(fileName, forceZSize);
 		} catch (Exception e) {

@@ -1,5 +1,8 @@
 package org.vcell.bioformats;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TSimpleServer;
 import org.apache.thrift.transport.TServerSocket;
@@ -31,11 +34,12 @@ public class ImageDatasetServer {
 
 	private static void startSimpleImageDatasetServer(ImageDatasetService.Processor<ImageDatasetHandler> processor, int port) {
 		try {
-			TServerTransport serverTransport = new TServerSocket(port);
+			InetSocketAddress inetSocketAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), port);
+			TServerTransport serverTransport = new TServerSocket(inetSocketAddress);
 			TServer imageDatasetServer = new TSimpleServer(
 					new org.apache.thrift.server.TServer.Args(serverTransport).processor(processor));
 
-			System.out.println("Starting the ImageDataset Server thread...");
+			System.out.println("Starting the ImageDataset Server thread on "+inetSocketAddress.getHostString()+":"+port);
 			imageDatasetServer.serve();
 		} catch (Exception e) {
 			e.printStackTrace();
