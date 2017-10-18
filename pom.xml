@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>14.0.0</version>
+		<version>17.1.1</version>
 		<relativePath />
 	</parent>
 
@@ -88,7 +88,6 @@
 	</ciManagement>
 
 	<properties>
-		<enforcer.skip>true</enforcer.skip>
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>UConn Health</license.copyrightOwners>
 	</properties>
@@ -114,11 +113,21 @@
 			<artifactId>libthrift</artifactId>
 			<version>0.10.0</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/loci/bio-formats -->
 		<dependency>
-			<groupId>loci</groupId>
-			<artifactId>bio-formats</artifactId>
-			<version>4.4.12</version>
+			<groupId>ome</groupId>
+			<artifactId>formats-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-bsd</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-gpl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>ome-xml</artifactId>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/io.scif/scifio -->
 		<dependency>

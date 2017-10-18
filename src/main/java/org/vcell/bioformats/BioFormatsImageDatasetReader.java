@@ -47,6 +47,7 @@ import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.ZeissLSMReader;
 import loci.formats.meta.MetadataRetrieve;
 import loci.formats.meta.MetadataStore;
+import ome.units.UNITS;
 import ome.units.quantity.Length;
 import ome.units.quantity.Time;
 import ome.units.unit.Unit;
@@ -219,28 +220,26 @@ public class BioFormatsImageDatasetReader {
 		int sizeY = metadataRetrieve.getPixelsSizeY(0).getValue();
 		int sizeZ = metadataRetrieve.getPixelsSizeZ(0).getValue();
 		ISize iSize = new ISize(sizeX, sizeY, sizeZ);
-		PositiveFloat pixelSizeX_m = metadataRetrieve.getPixelsPhysicalSizeX(0);
-		PositiveFloat pixelSizeY_m = metadataRetrieve.getPixelsPhysicalSizeY(0);
-		PositiveFloat pixelSizeZ_m = metadataRetrieve.getPixelsPhysicalSizeZ(0);
-		Unit<Length> unit_um = ome.units.UNITS.MICROMETRE;
-		if (pixelSizeX_m==null || pixelSizeX_m.getValue().doubleValue()==0){
-			pixelSizeX_m = new PositiveFloat(Double.valueOf(.3e-6));
+		Number pixelSizeX_m = um(metadataRetrieve.getPixelsPhysicalSizeX(0));
+		Number pixelSizeY_m = um(metadataRetrieve.getPixelsPhysicalSizeY(0));
+		Number pixelSizeZ_m = um(metadataRetrieve.getPixelsPhysicalSizeZ(0));
+		if (pixelSizeX_m==null || pixelSizeX_m.doubleValue()==0){
+			pixelSizeX_m = .3e-6;
 		}
-		if (pixelSizeY_m==null || pixelSizeY_m.getValue().doubleValue()==0){
-			pixelSizeY_m = new PositiveFloat(Double.valueOf(.3e-6));
+		if (pixelSizeY_m==null || pixelSizeY_m.doubleValue()==0){
+			pixelSizeY_m = .3e-6;
 		}
-		if (pixelSizeZ_m==null || pixelSizeZ_m.getValue().doubleValue()==0 || pixelSizeZ_m.getValue().doubleValue()==1){
-			pixelSizeZ_m = new PositiveFloat(Double.valueOf(0.9e-6));
+		if (pixelSizeZ_m==null || pixelSizeZ_m.doubleValue()==0 || pixelSizeZ_m.doubleValue()==1){
+			pixelSizeZ_m = 0.9e-6;
 		}
 		
 		Extent extent = null;
-		if (pixelSizeX_m!=null && pixelSizeY_m!=null && pixelSizeZ_m!=null && 
-				pixelSizeX_m.getValue().doubleValue()>0 && 
-				pixelSizeY_m.getValue().doubleValue()>0 && 
-				pixelSizeZ_m.getValue().doubleValue()>0){
-			extent = new Extent(pixelSizeX_m.getValue().doubleValue()*iSize.getX(),
-								pixelSizeY_m.getValue().doubleValue()*iSize.getY(),
-								pixelSizeZ_m.getValue().doubleValue()*iSize.getZ());
+		if (pixelSizeX_m.doubleValue()>0 && 
+				pixelSizeY_m.doubleValue()>0 && 
+				pixelSizeZ_m.doubleValue()>0){
+			extent = new Extent(pixelSizeX_m.doubleValue()*iSize.getX(),
+								pixelSizeY_m.doubleValue()*iSize.getY(),
+								pixelSizeZ_m.doubleValue()*iSize.getZ());
 		}else{
 			extent = new Extent(1,1,1);
 		}
@@ -412,10 +411,10 @@ public class BioFormatsImageDatasetReader {
 		System.out.println("pixel size Y: "+meta.getPixelsPhysicalSizeY(ii));
 		System.out.println("pixel size Z: "+meta.getPixelsPhysicalSizeZ(ii));
 		if (meta.getPixelsPhysicalSizeX(0)!=null){
-		System.out.println("   image Size X: "+(meta.getPixelsSizeX(ii).getValue()*meta.getPixelsPhysicalSizeX(0).getValue().doubleValue())+" microns");
+		System.out.println("   image Size X: "+(meta.getPixelsSizeX(ii).getValue()*um(meta.getPixelsPhysicalSizeX(0)).doubleValue())+" microns");
 		}
 		if (meta.getPixelsPhysicalSizeY(0)!=null){
-		System.out.println("   image Size Y: "+(meta.getPixelsSizeY(ii).getValue()*meta.getPixelsPhysicalSizeY(0).getValue().doubleValue())+" microns");
+		System.out.println("   image Size Y: "+(meta.getPixelsSizeY(ii).getValue()*um(meta.getPixelsPhysicalSizeY(0)).doubleValue())+" microns");
 		}
 		System.out.println("size X: "+meta.getPixelsSizeX(ii).getValue());
 		System.out.println("size Y: "+meta.getPixelsSizeY(ii).getValue());
@@ -470,7 +469,7 @@ public class BioFormatsImageDatasetReader {
 		Unit<Time> unit_time = ome.units.UNITS.SECOND;
 		//Read raw times
 		for (int i = 0; i < planeCount; i++) {
-		      Time deltaT = new Time(meta.getPlaneDeltaT(0, i),unit_time);
+		      Time deltaT = new Time(meta.getPlaneDeltaT(0, i).value(unit_time), unit_time);
 //		      if (deltaT == null){
 //		    	  continue;
 //		      }
@@ -546,9 +545,12 @@ public class BioFormatsImageDatasetReader {
 					minValue = Math.min(minValue,0xffff&((int)pixels[0][i]));
 					maxValue = Math.max(maxValue,0xffff&((int)pixels[0][i]));
 				}
-				Float pixelSizeX_m = (meta.getPixelsPhysicalSizeX(0)==null?null:meta.getPixelsPhysicalSizeX(0).getValue().floatValue());
-				Float pixelSizeY_m = (meta.getPixelsPhysicalSizeY(0)==null?null:meta.getPixelsPhysicalSizeY(0).getValue().floatValue());
-				Float pixelSizeZ_m = (meta.getPixelsPhysicalSizeZ(0)==null?null:meta.getPixelsPhysicalSizeZ(0).getValue().floatValue());
+				Length physSizeX = meta.getPixelsPhysicalSizeX(0);
+				Length physSizeY = meta.getPixelsPhysicalSizeX(1);
+				Length physSizeZ = meta.getPixelsPhysicalSizeX(2);
+				Float pixelSizeX_m = (physSizeX==null?null:um(physSizeX).floatValue());
+				Float pixelSizeY_m = (physSizeY==null?null:um(physSizeY).floatValue());
+				Float pixelSizeZ_m = (physSizeZ==null?null:um(physSizeZ).floatValue());
 				if (pixelSizeX_m==null || pixelSizeX_m==0f){
 					pixelSizeX_m = 0.3e-6f;
 				}
@@ -613,6 +615,10 @@ public class BioFormatsImageDatasetReader {
 		return imageDataset;
 	}
 	
+	private static Number um(final Length length) {
+		return length.value(UNITS.MICROMETER);
+	}
+
 	private static ImageDataset createZStack(ImageDataset[] argImageDatasets) {
 		// Error checking
 		if (argImageDatasets.length == 0) {
