@@ -89,7 +89,7 @@
 
 	<properties>
 		<enforcer.skip>true</enforcer.skip>
-		<license.licenseName>GPL</license.licenseName>
+		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>UConn Health</license.copyrightOwners>
 	</properties>
 
