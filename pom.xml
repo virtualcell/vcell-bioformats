@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -14,10 +14,9 @@
 	<packaging>jar</packaging>
 
 	<name>vcell-bioformats</name>
-	<url>http://maven.apache.org</url>
-
 	<!-- COMMON PROJECT DEFINITIONS AND PROPERTIES -->
 	<description>A Bioformats implementation of the ImageDataset service (optionally used by VCell)</description>
+	<url>http://maven.apache.org</url>
 	<inceptionYear>2017</inceptionYear>
 	<organization>
 		<name>VCell</name>
@@ -30,6 +29,7 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
 	<developers>
 		<developer>
 			<id>jcschaff</id>
@@ -61,6 +61,7 @@
 			<name>contributor</name>
 		</contributor>
 	</contributors>
+
 	<mailingLists>
 		<mailingList>
 			<name>VCell Open Discussion Forum</name>
@@ -70,6 +71,7 @@
 			<archive>https://groups.google.com/group/vcell-discuss</archive>
 		</mailingList>
 	</mailingLists>
+
 	<scm>
 		<connection>scm:git:git://github.com/scijava/pom-scijava-base</connection>
 		<developerConnection>scm:git:git@github.com:scijava/pom-scijava-base</developerConnection>
@@ -84,30 +86,12 @@
 		<system>Jenkins</system>
 		<url>http://jenkins.vcell.org/job/vcell/</url>
 	</ciManagement>
+
 	<properties>
 		<enforcer.skip>true</enforcer.skip>
 		<license.licenseName>GPL</license.licenseName>
 		<license.copyrightOwners>UConn Health</license.copyrightOwners>
 	</properties>
-
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>org.vcell.bioformats.ImageDatasetServer</mainClass>
-						</manifest>
-					</archive>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 	<repositories>
 		<!-- needed for imagej dependencies -->
@@ -149,5 +133,21 @@
 
 	</dependencies>
 
-
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>org.vcell.bioformats.ImageDatasetServer</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
