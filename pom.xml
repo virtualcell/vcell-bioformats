@@ -1,11 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>14.0.0</version>
+		<version>17.1.1</version>
+		<relativePath />
 	</parent>
 
 	<groupId>org.vcell</groupId>
@@ -14,10 +15,9 @@
 	<packaging>jar</packaging>
 
 	<name>vcell-bioformats</name>
-	<url>http://maven.apache.org</url>
-
 	<!-- COMMON PROJECT DEFINITIONS AND PROPERTIES -->
 	<description>A Bioformats implementation of the ImageDataset service (optionally used by VCell)</description>
+	<url>http://maven.apache.org</url>
 	<inceptionYear>2017</inceptionYear>
 	<organization>
 		<name>VCell</name>
@@ -30,6 +30,7 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+
 	<developers>
 		<developer>
 			<id>jcschaff</id>
@@ -61,6 +62,7 @@
 			<name>contributor</name>
 		</contributor>
 	</contributors>
+
 	<mailingLists>
 		<mailingList>
 			<name>VCell Open Discussion Forum</name>
@@ -70,44 +72,25 @@
 			<archive>https://groups.google.com/group/vcell-discuss</archive>
 		</mailingList>
 	</mailingLists>
+
 	<scm>
-		<connection>scm:git:git://github.com/scijava/pom-scijava-base</connection>
-		<developerConnection>scm:git:git@github.com:scijava/pom-scijava-base</developerConnection>
-		<tag>pom-scijava-base-3.0.0</tag>
-		<url>https://github.com/scijava/pom-scijava-base/</url>
+		<connection>scm:git:git://github.com/virtualcell/vcell-bioformats</connection>
+		<developerConnection>scm:git:git@github.com:virtualcell/vcell-bioformats</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/virtualcell/vcell-bioformats</url>
 	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
 		<url>http://code3.cam.uchc.edu/bugzilla/</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://jenkins.vcell.org/job/vcell/</url>
+		<system>None</system>
 	</ciManagement>
+
 	<properties>
-		<enforcer.skip>true</enforcer.skip>
-		<license.licenseName>GPL</license.licenseName>
+		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>UConn Health</license.copyrightOwners>
 	</properties>
-
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>org.vcell.bioformats.ImageDatasetServer</mainClass>
-						</manifest>
-					</archive>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 	<repositories>
 		<!-- needed for imagej dependencies -->
@@ -130,24 +113,45 @@
 			<artifactId>libthrift</artifactId>
 			<version>0.10.0</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/loci/bio-formats -->
+
 		<dependency>
-			<groupId>loci</groupId>
-			<artifactId>bio-formats</artifactId>
-			<version>4.4.12</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.scif/scifio -->
-		<dependency>
-			<groupId>io.scif</groupId>
-			<artifactId>scifio</artifactId>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.scif/scifio-bf-compat -->
-		<dependency>
-			<groupId>io.scif</groupId>
-			<artifactId>scifio-bf-compat</artifactId>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-bsd</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-gpl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>ome-xml</artifactId>
+		</dependency>
 	</dependencies>
 
-
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>org.vcell.bioformats.ImageDatasetServer</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
