@@ -129,17 +129,6 @@
 			<groupId>org.openmicroscopy</groupId>
 			<artifactId>ome-xml</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.scif/scifio -->
-		<dependency>
-			<groupId>io.scif</groupId>
-			<artifactId>scifio</artifactId>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.scif/scifio-bf-compat -->
-		<dependency>
-			<groupId>io.scif</groupId>
-			<artifactId>scifio-bf-compat</artifactId>
-		</dependency>
-
 	</dependencies>
 
 	<build>
