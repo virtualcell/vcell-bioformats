@@ -1,5 +1,7 @@
 package org.vcell.bioformats;
 
+import java.io.File;
+
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -14,11 +16,17 @@ public class SimpleClientTest
 {
     public static void main(String[] args)
     {
-    	if (args.length!=1){
-    		System.out.println("usage: SimpleClientTest port");
+    	if (args.length!=2){
+    		System.out.println("usage: SimpleClientTest port imagefile");
     		System.exit(-1);
     	}
     	int port = Integer.parseInt(args[0]);
+    	String imagefilestr = args[1];
+    	File imagefile = new File(imagefilestr);
+    	if (!imagefile.exists()) {
+    		System.out.println("image file "+imagefilestr+" not found");
+    		System.exit(-1);
+    	}
     	
         try (TTransport transport = new TSocket("localhost", port);){
             transport.open();
@@ -28,15 +36,15 @@ public class SimpleClientTest
             ImageDatasetService.Client client = new ImageDatasetService.Client(protocol);
             
             System.out.println("established connection");
-            perform(client);
+            readImageFile(client, imagefile);
             System.out.println("done with all tests");
         } catch (Throwable e) {
             e.printStackTrace();
         }
     }
 
-	private static void perform(Client client) throws ThriftImageException, TException {
-		String imagePath = "/Users/schaff/Documents/workspace-modular/vcell/2chZT.lsm";
+    private static void readImageFile(Client client, File imagefile) throws ThriftImageException, TException {
+		String imagePath = imagefile.getAbsolutePath();
 		System.out.println("reading file "+imagePath);
 		ImageDataset imageDataset = client.readImageDataset(imagePath);
 		System.out.println("read file "+imagePath);
