@@ -469,10 +469,13 @@ public class BioFormatsImageDatasetReader {
 		Unit<Time> unit_time = ome.units.UNITS.SECOND;
 		//Read raw times
 		for (int i = 0; i < planeCount; i++) {
-		      Time deltaT = new Time(meta.getPlaneDeltaT(0, i).value(unit_time), unit_time);
-//		      if (deltaT == null){
-//		    	  continue;
-//		      }
+			Time deltaT = null;
+			Time planeDeltaT = meta.getPlaneDeltaT(0, i);
+		      if (planeDeltaT == null){
+		    	  deltaT = new Time(0, unit_time);
+		      }else{
+		    	  deltaT = new Time(planeDeltaT.value(unit_time), unit_time);
+		      }
 
 ////			Float timeF = meta.getPlaneTimingDeltaT(0, 0, i);
 //			// convert plane ZCT coordinates into image plane index
