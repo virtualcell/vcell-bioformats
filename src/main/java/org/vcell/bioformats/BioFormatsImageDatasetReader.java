@@ -619,7 +619,10 @@ public class BioFormatsImageDatasetReader {
 	}
 	
 	private static Number um(final Length length) {
-		return length.value(UNITS.MICROMETER);
+		if(length != null){
+			return length.value(UNITS.MICROMETER);
+		}
+		return null;
 	}
 
 	private static ImageDataset createZStack(ImageDataset[] argImageDatasets) {
