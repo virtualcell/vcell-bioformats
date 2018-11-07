@@ -197,8 +197,10 @@ public class BioFormatsImageDatasetReaderFrm {
 		int numChannels = -1;
 		//Sort entryNames because ZipFile doesn't guarantee order
 		TreeMap<String, Integer> sortedChannelsTreeMap = new TreeMap<String, Integer>();
+		int zipCntr = 0;
 		while (enumZipEntry.hasMoreElements()){
-
+			System.out.println(BioformatsImageDatasetReader.BIOF_XML_STATUS_START_DELIM+"Reading zip "+(zipCntr+1)+" of "+zipFile.size()+BioformatsImageDatasetReader.BIOF_XML_STATUS_END_DELIM);
+			zipCntr++;
 			ZipEntry entry = enumZipEntry.nextElement();
 			if (entry.isDirectory()) {
 				continue;
@@ -335,7 +337,7 @@ public class BioFormatsImageDatasetReaderFrm {
 		if(BIO_FORMATS_DEBUG){printInfo(imageReader);}
 		DomainInfo domainInfo = getDomainInfo(imageReader);
 		IFormatReader formatReader = imageReader.getReader(imageID);
-		
+
 		if(formatReader instanceof ZeissLSMReader){
 			//this fixes lsm .mdb problems
 			formatReader.close();
@@ -365,6 +367,12 @@ public class BioFormatsImageDatasetReaderFrm {
 				"z="+formatReader.getSizeZ()+","+
 				"c="+formatReader.getSizeC()+","+
 				"effective c="+formatReader.getEffectiveSizeC()+","+//how to interpret rgbChannelCount
+//				  /**
+//				   * Gets the effective size of the C dimension, guaranteeing that
+//				   * getEffectiveSizeC() * getSizeZ() * getSizeT() == getImageCount()
+//				   * regardless of the result of isRGB().
+//				   */
+//				  int getEffectiveSizeC();
 				"t="+formatReader.getSizeT()+","+
 				"seriesCnt="+formatReader.getSeriesCount()+","+
 				"imageCnt="+formatReader.getImageCount()+","+
@@ -378,71 +386,76 @@ public class BioFormatsImageDatasetReaderFrm {
 				")");
 		}
 		try{
-			int CHANNELCOUNT = Math.max(formatReader.getRGBChannelCount(),formatReader.getSizeC());
-			UShortImage[][] ushortImageCTZArr = new UShortImage[(bMergeChannels?1:CHANNELCOUNT)][(timeIndex==null?formatReader.getSizeT()*formatReader.getSizeZ():formatReader.getSizeZ())];
+//			formatReader.openBytes(formatReader.getImageCount()-1);//Do this to read all the bytes, increase spped
+//			int CHANNELCOUNT = Math.max(formatReader.getRGBChannelCount(),formatReader.getSizeC());
+			UShortImage[][] ushortImageCTZArr = new UShortImage[(bMergeChannels?1:formatReader.getRGBChannelCount())][(timeIndex==null?formatReader.getSizeT()*formatReader.getSizeZ():formatReader.getSizeZ())];
 			int tzIndex = 0;
+			int tzcCounter = 0;
 			for (int tndx = (timeIndex==null?0:timeIndex); tndx <= (timeIndex==null?formatReader.getSizeT()-1:timeIndex); tndx++) {
 				for (int zndx = 0; zndx < formatReader.getSizeZ(); zndx++) {
-					BufferedImage bi = null;
-					int[] mergePixels = (bMergeChannels?new int[(resize==null?domainInfo.getiSize().getX():resize.getX())*(resize==null?domainInfo.getiSize().getY():resize.getY())]:null);
-					for (int cndx = 0; cndx < formatReader.getSizeC(); cndx++) {
+					BufferedImage[] bufImgChannels = new BufferedImage[formatReader.getRGBChannelCount()];
+					short[] mergePixels = (bMergeChannels?new short[(resize==null?domainInfo.getiSize().getX():resize.getX())*(resize==null?domainInfo.getiSize().getY():resize.getY())]:null);
+					for (int cndx = 0; cndx < formatReader.getEffectiveSizeC(); cndx++) {
+						if(tzcCounter > 0) {
+							System.out.println(BioformatsImageDatasetReader.BIOF_XML_STATUS_START_DELIM+"T="+tndx+" Z="+zndx+" C="+cndx+BioformatsImageDatasetReader.BIOF_XML_STATUS_END_DELIM);
+						}
+						tzcCounter++;
 						int index = formatReader.getIndex(zndx, cndx, tndx);
-						System.err.println("z="+zndx+"c="+cndx+"t="+tndx+" indx="+index);
 						byte[] imgPlaneBytes = formatReader.openBytes(index);
 						ByteBuffer bb = ByteBuffer.wrap(imgPlaneBytes);
 						bb.order((formatReader.isLittleEndian()?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN));
-						short[] shorts = new short[formatReader.getSizeX()*formatReader.getSizeY()];
-						if(formatReader.getBitsPerPixel() == 8) {
-							for (int i = 0; i < shorts.length; i++) {
-								shorts[i] = (short)(0x00FF&imgPlaneBytes[i]);
+						for (int channels = 0; channels < formatReader.getRGBChannelCount(); channels++) {
+							short[] shorts = new short[formatReader.getSizeX()*formatReader.getSizeY()];
+							if(formatReader.getBitsPerPixel() == 8) {
+								for (int i = 0; i < shorts.length; i++) {
+									shorts[i] = (short)(0x00FF&bb.get());
+								}
+							}else if(formatReader.getBitsPerPixel() == 16) {
+								for (int i = 0; i < shorts.length; i++) {
+									shorts[i] = bb.getShort();
+								}
+							}else if(formatReader.getPixelType() == FormatTools.UINT32) {
+								for (int i = 0; i < shorts.length; i++) {
+									shorts[i] = (short)(bb.getInt());
+								}
+							}else if(formatReader.getPixelType() == FormatTools.FLOAT) {
+								for (int i = 0; i < shorts.length; i++) {
+									shorts[i] = (short)(bb.getFloat()*65535);
+								}
+							}else if(formatReader.getPixelType() == FormatTools.DOUBLE) {
+								for (int i = 0; i < shorts.length; i++) {
+									shorts[i] = (short)(bb.getDouble()*65535);
+								}
+							}else {
+								throw new Exception("Expecting bitsPerPixel to be 8 or 16 but got "+formatReader.getBitsPerPixel());
 							}
-						}else if(formatReader.getBitsPerPixel() == 16) {
-							for (int i = 0; i < shorts.length; i++) {
-								shorts[i] = bb.getShort();
+							bufImgChannels[channels] = AWTImageTools.makeImage(shorts, formatReader.getSizeX(), formatReader.getSizeY(), false);
+							if(resize != null){
+								double scaleFactor = (double)resize.getX()/(double)formatReader.getSizeX();
+							    AffineTransform scaleAffineTransform = AffineTransform.getScaleInstance(scaleFactor,scaleFactor);
+							    AffineTransformOp scaleAffineTransformOp = new AffineTransformOp( scaleAffineTransform, (bufImgChannels[0].getColorModel() instanceof IndexColorModel?AffineTransformOp.TYPE_NEAREST_NEIGHBOR:AffineTransformOp.TYPE_BILINEAR));
+						    	BufferedImage scaledImage = new BufferedImage(resize.getX(),resize.getY(),bufImgChannels[channels].getType());
+						    	bufImgChannels[channels] = scaleAffineTransformOp.filter( bufImgChannels[channels], scaledImage);
 							}
-						}else if(formatReader.getPixelType() == FormatTools.UINT32) {
-							for (int i = 0; i < shorts.length; i++) {
-								shorts[i] = (short)(bb.getInt());
-							}
-						}else if(formatReader.getPixelType() == FormatTools.FLOAT) {
-							for (int i = 0; i < shorts.length; i++) {
-								shorts[i] = (short)(bb.getFloat()*65535);
-							}
-						}else if(formatReader.getPixelType() == FormatTools.DOUBLE) {
-							for (int i = 0; i < shorts.length; i++) {
-								shorts[i] = (short)(bb.getDouble()*65535);
-							}
-						}else {
-							throw new Exception("Expecting bitsPerPixel to be 8 or 16 but got "+formatReader.getBitsPerPixel());
-						}
-						bi = AWTImageTools.makeImage(shorts, formatReader.getSizeX(), formatReader.getSizeY(), false);
-
-						if(resize != null){
-							double scaleFactor = (double)resize.getX()/(double)formatReader.getSizeX();
-						    AffineTransform scaleAffineTransform = AffineTransform.getScaleInstance(scaleFactor,scaleFactor);
-						    AffineTransformOp scaleAffineTransformOp = new AffineTransformOp( scaleAffineTransform, (bi.getColorModel() instanceof IndexColorModel?AffineTransformOp.TYPE_NEAREST_NEIGHBOR:AffineTransformOp.TYPE_BILINEAR));
-						    	BufferedImage scaledImage = new BufferedImage(resize.getX(),resize.getY(),bi.getType());
-						    	bi = scaleAffineTransformOp.filter( bi, scaledImage);
-						}
-						if(!bMergeChannels) {
-							ushortImageCTZArr[cndx][tzIndex] =
-								new UShortImage(AWTImageTools.getShorts(bi)[0],domainInfo.getOrigin(),domainInfo.getExtent(),
+							if(!bMergeChannels) {
+								ushortImageCTZArr[channels][tzIndex] =
+									new UShortImage(AWTImageTools.getShorts(bufImgChannels[channels])[0],domainInfo.getOrigin(),domainInfo.getExtent(),
 										(resize==null?domainInfo.getiSize().getX():resize.getX()),
 										(resize==null?domainInfo.getiSize().getY():resize.getY()),
-										1);
-						}else {
-							short[] chanshorts = AWTImageTools.getShorts(bi)[0];
-							for (int i = 0; i < mergePixels.length; i++) {
-								mergePixels[i]+= chanshorts[i]&0x0000FFFF;
+										1);								
+							}else {
+								short[] chanshorts = AWTImageTools.getShorts(bufImgChannels[channels])[0];
+								for (int i = 0; i < mergePixels.length; i++) {
+									mergePixels[i] = (short)Math.max(mergePixels[i], chanshorts[i]);
+
+								}
 							}
 						}
+
 					}
 					if(bMergeChannels) {
-						for (int i = 0; i < mergePixels.length; i++) {
-							mergePixels[i]/= formatReader.getSizeC();
-						}
 						ushortImageCTZArr[0][tzIndex] =
-								new UShortImage(AWTImageTools.getShorts(bi)[0],domainInfo.getOrigin(),domainInfo.getExtent(),
+								new UShortImage(mergePixels,domainInfo.getOrigin(),domainInfo.getExtent(),
 									(resize==null?domainInfo.getiSize().getX():resize.getX()),
 									(resize==null?domainInfo.getiSize().getY():resize.getY()),
 									1);
