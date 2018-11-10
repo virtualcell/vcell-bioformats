@@ -387,8 +387,6 @@ public class BioFormatsImageDatasetReaderFrm {
 				")");
 		}
 		try{
-//			formatReader.openBytes(formatReader.getImageCount()-1);//Do this to read all the bytes, increase spped
-//			int CHANNELCOUNT = Math.max(formatReader.getRGBChannelCount(),formatReader.getSizeC());
 			UShortImage[][] ushortImageCTZArr = new UShortImage[(bMergeChannels?1:formatReader.getRGBChannelCount()*formatReader.getEffectiveSizeC())][(timeIndex==null?formatReader.getSizeT()*formatReader.getSizeZ():formatReader.getSizeZ())];
 			int tzIndex = 0;
 			int tzcCounter = 0;
@@ -405,33 +403,33 @@ public class BioFormatsImageDatasetReaderFrm {
 						int index = formatReader.getIndex(zndx, cndx, tndx);
 						byte[] imgPlaneBytes = formatReader.openBytes(index);
 						ByteBuffer bb = ByteBuffer.wrap(imgPlaneBytes);
+						short[][] shorts = new short[formatReader.getRGBChannelCount()][formatReader.getSizeX()*formatReader.getSizeY()];
 						bb.order((formatReader.isLittleEndian()?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN));
+						boolean bInterleave = formatReader.isInterleaved();
+						int indexer = 0;
 						for (int channels = 0; channels < formatReader.getRGBChannelCount(); channels++) {
-							short[] shorts = new short[formatReader.getSizeX()*formatReader.getSizeY()];
-							if(formatReader.getBitsPerPixel() == 8) {
-								for (int i = 0; i < shorts.length; i++) {
-									shorts[i] = (short)(0x00FF&bb.get());
+							short processed = 0;
+							for (int i = 0; i < shorts[channels].length; i++) {
+								if(formatReader.getBitsPerPixel() == 8) {
+									processed = (short)(0x00FF&bb.get());
+								}else if(formatReader.getBitsPerPixel() == 16) {
+									processed = bb.getShort();
+								}else if(formatReader.getPixelType() == FormatTools.UINT32) {
+									processed = (short)(bb.getInt());
+								}else if(formatReader.getPixelType() == FormatTools.FLOAT) {
+									processed = (short)(bb.getFloat()*65535);
+								}else if(formatReader.getPixelType() == FormatTools.DOUBLE) {
+									processed = (short)(bb.getDouble()*65535);
+								}else {
+									throw new Exception("Expecting bitsPerPixel to be 8 or 16 but got "+formatReader.getBitsPerPixel());
 								}
-							}else if(formatReader.getBitsPerPixel() == 16) {
-								for (int i = 0; i < shorts.length; i++) {
-									shorts[i] = bb.getShort();
-								}
-							}else if(formatReader.getPixelType() == FormatTools.UINT32) {
-								for (int i = 0; i < shorts.length; i++) {
-									shorts[i] = (short)(bb.getInt());
-								}
-							}else if(formatReader.getPixelType() == FormatTools.FLOAT) {
-								for (int i = 0; i < shorts.length; i++) {
-									shorts[i] = (short)(bb.getFloat()*65535);
-								}
-							}else if(formatReader.getPixelType() == FormatTools.DOUBLE) {
-								for (int i = 0; i < shorts.length; i++) {
-									shorts[i] = (short)(bb.getDouble()*65535);
-								}
-							}else {
-								throw new Exception("Expecting bitsPerPixel to be 8 or 16 but got "+formatReader.getBitsPerPixel());
+								shorts[(bInterleave?indexer%formatReader.getRGBChannelCount():channels)][(bInterleave?(int)(indexer/formatReader.getRGBChannelCount()):i)] = processed;
+//								System.out.println((indexer%formatReader.getRGBChannelCount())+" "+((int)(indexer/formatReader.getRGBChannelCount()))+" "+processed);
+								indexer++;
 							}
-							bufImgChannels[channels] = AWTImageTools.makeImage(shorts, formatReader.getSizeX(), formatReader.getSizeY(), false);
+						}
+						for (int channels = 0; channels < formatReader.getRGBChannelCount(); channels++) {
+							bufImgChannels[channels] = AWTImageTools.makeImage(shorts[channels], formatReader.getSizeX(), formatReader.getSizeY(), false);
 							if(resize != null){
 								double scaleFactor = (double)resize.getX()/(double)formatReader.getSizeX();
 							    AffineTransform scaleAffineTransform = AffineTransform.getScaleInstance(scaleFactor,scaleFactor);
